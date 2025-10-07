@@ -2,6 +2,9 @@
   "name": "lockparse",
   "version": "0.0.1",
   "description": "A lightweight lockfile parser.",
+  "files": [
+    "lib"
+  ],
   "keywords": [
     "lockfile",
     "lock",
