@@ -15,6 +15,8 @@ const typeMap: Record<string, LockFileType> = {
   bun: 'bun'
 };
 
+export * from './types.js';
+
 export function parse(
   input: string,
   typeOrFileName: string,
