@@ -16,6 +16,7 @@ const typeMap: Record<string, LockFileType> = {
 };
 
 export * from './types.js';
+export * from './traverse.js';
 
 export function parse(
   input: string,

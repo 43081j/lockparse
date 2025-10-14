@@ -14,7 +14,16 @@ const yamlPairPattern =
   /^(?<indent> *)(['"](?<key>[^"']+)["']|(?<key>[^:]+)):( (["'](?<value>[^"']+)["']|(?<value>.+)))?$/;
 const spacePattern = /^(?<spaces> *)[^ ]/;
 
-export function* createYamlPairReader(input: string) {
+export interface YamlPair {
+  indent: number;
+  key: string;
+  value: string | null;
+  path: string[];
+}
+
+export function* createYamlPairReader(
+  input: string
+): Generator<YamlPair, void, unknown> {
   const lineReader = createLineReader(input);
   let lastIndent = 0;
   const path: string[] = [];

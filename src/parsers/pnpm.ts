@@ -48,7 +48,7 @@ export async function parsePnpm(input: string): Promise<ParsedLockFile> {
         packageMap,
         depMapKey,
         depName,
-        depVersionKey
+        depVersionKey ?? undefined
       );
       tryAddDependency(currentPackage, dependencyType, depPackage);
     }

@@ -72,13 +72,14 @@ function processPackages(input: Record<string, NpmLockFilePackage>): {
     };
   }
 
-  const root = packageMap[''];
-
   for (const [pkgKey, pkg] of Object.entries(input)) {
     const parsedPkg = packageMap[pkgKey];
 
     processDependencyMap(pkg, parsedPkg, packageMap, pkgKey);
   }
+
+  const root = packageMap[''];
+  delete packageMap[''];
 
   return {packages: Object.values(packageMap), root};
 }
