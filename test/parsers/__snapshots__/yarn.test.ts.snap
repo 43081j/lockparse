@@ -1,5 +1,87 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`yarn parser > handles optional dependencies 1`] = `
+{
+  "packages": [
+    {
+      "dependencies": [],
+      "devDependencies": [],
+      "name": "some-package",
+      "optionalDependencies": [
+        {
+          "dependencies": [],
+          "devDependencies": [],
+          "name": "another-package",
+          "optionalDependencies": [],
+          "peerDependencies": [],
+          "version": "2.3.4",
+        },
+      ],
+      "peerDependencies": [],
+      "version": "1.2.3",
+    },
+    {
+      "dependencies": [],
+      "devDependencies": [],
+      "name": "another-package",
+      "optionalDependencies": [],
+      "peerDependencies": [],
+      "version": "2.3.4",
+    },
+  ],
+  "root": {
+    "dependencies": [],
+    "devDependencies": [],
+    "name": "root",
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "version": "",
+  },
+  "type": "yarn",
+}
+`;
+
+exports[`yarn parser > handles optional dependencies seen before dependency 1`] = `
+{
+  "packages": [
+    {
+      "dependencies": [],
+      "devDependencies": [],
+      "name": "some-package",
+      "optionalDependencies": [
+        {
+          "dependencies": [],
+          "devDependencies": [],
+          "name": "another-package",
+          "optionalDependencies": [],
+          "peerDependencies": [],
+          "version": "2.3.4",
+        },
+      ],
+      "peerDependencies": [],
+      "version": "1.2.3",
+    },
+    {
+      "dependencies": [],
+      "devDependencies": [],
+      "name": "another-package",
+      "optionalDependencies": [],
+      "peerDependencies": [],
+      "version": "2.3.4",
+    },
+  ],
+  "root": {
+    "dependencies": [],
+    "devDependencies": [],
+    "name": "root",
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "version": "",
+  },
+  "type": "yarn",
+}
+`;
+
 exports[`yarn parser > parse simple yarn lock file 1`] = `
 {
   "packages": [
@@ -253,7 +335,10 @@ exports[`yarn parser > parses a complex yarn lock file 1`] = `
       "version": "0.25.10",
     },
     {
-      "dependencies": [
+      "dependencies": [],
+      "devDependencies": [],
+      "name": "esbuild",
+      "optionalDependencies": [
         {
           "dependencies": [],
           "devDependencies": [],
@@ -463,9 +548,6 @@ exports[`yarn parser > parses a complex yarn lock file 1`] = `
           "version": "0.25.10",
         },
       ],
-      "devDependencies": [],
-      "name": "esbuild",
-      "optionalDependencies": [],
       "peerDependencies": [],
       "version": "0.25.10",
     },

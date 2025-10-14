@@ -70,4 +70,42 @@ __metadata:
     const parsed = await parse(input, 'yarn');
     expect(parsed).toMatchSnapshot();
   });
+
+  test('handles optional dependencies', async () => {
+    const input = `
+"some-package@npm:^1.0.0":
+  version: 1.2.3
+  resolution: some-package@npm:1.2.3
+  dependencies:
+    another-package: npm:^2.0.0
+  dependenciesMeta:
+    another-package:
+      optional: true
+
+"another-package@npm:^2.0.0":
+  version: 2.3.4
+  resolution: another-package@npm:2.3.4
+`;
+    const parsed = await parse(input, 'yarn');
+    expect(parsed).toMatchSnapshot();
+  });
+
+  test('handles optional dependencies seen before dependency', async () => {
+    const input = `
+"some-package@npm:^1.0.0":
+  version: 1.2.3
+  resolution: some-package@npm:1.2.3
+  dependenciesMeta:
+    another-package:
+      optional: true
+  dependencies:
+    another-package: npm:^2.0.0
+
+"another-package@npm:^2.0.0":
+  version: 2.3.4
+  resolution: another-package@npm:2.3.4
+`;
+    const parsed = await parse(input, 'yarn');
+    expect(parsed).toMatchSnapshot();
+  });
 });

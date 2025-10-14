@@ -141,6 +141,7 @@ function processYarn(
   packageMap: Record<string, ParsedDependency>
 ): void {
   const pairReader = createYamlPairReader(input);
+  const optionalDependencies: Array<[string, string]> = [];
 
   for (const pair of pairReader) {
     if (pair.path.length == 0 && !pair.value && pair.key.includes('@npm:')) {
@@ -203,6 +204,26 @@ function processYarn(
       if (pkg) {
         // oxlint-disable-next-line no-unsafe-type-assertion
         pkg[depType as DependencyType].push(depPkg);
+      }
+    } else if (
+      pair.path.length === 3 &&
+      pair.value === 'true' &&
+      pair.key === 'optional' &&
+      pair.path[1] === 'dependenciesMeta'
+    ) {
+      const pkgKey = pair.path[0];
+      optionalDependencies.push([pkgKey, pair.path[2]]);
+    }
+  }
+
+  for (const [pkgKey, depName] of optionalDependencies) {
+    const pkg = packageMap[pkgKey];
+    if (pkg) {
+      const deps = pkg.dependencies;
+      const index = deps.findIndex((d) => d.name === depName);
+      if (index !== -1) {
+        const [dep] = deps.splice(index, 1);
+        pkg.optionalDependencies.push(dep);
       }
     }
   }
