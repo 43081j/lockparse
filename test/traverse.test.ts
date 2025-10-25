@@ -1,5 +1,5 @@
 import {describe, it, expect, vi} from 'vitest';
-import {traverse} from '../src/traverse.js';
+import {traverse, type VisitorFn} from '../src/traverse.js';
 import type {ParsedDependency} from '../src/types.js';
 
 describe('traverse', () => {
@@ -40,8 +40,8 @@ describe('traverse', () => {
       optionalDependencies: []
     };
 
-    const visitDependency = vi.fn();
-    const visitDevDependency = vi.fn();
+    const visitDependency = vi.fn<VisitorFn>();
+    const visitDevDependency = vi.fn<VisitorFn>();
 
     traverse(root, {
       dependency: visitDependency,
@@ -61,15 +61,16 @@ describe('traverse', () => {
     expect(visitedDependencies).toEqual(['dep1']);
     expect(visitedDevDependencies).toEqual(['dep1-devDep1', 'devDep1']);
 
-    const parentOfDep1 = visitDependency.mock.calls[0][1];
-    expect(parentOfDep1.name).toBe('root');
+    const pathOfDep1 = visitDependency.mock.calls[0][2]!;
+    expect(pathOfDep1.map((node) => node.name)).toEqual(['root']);
 
-    const parentOfDep1DevDep1 = visitDevDependency.mock.calls[0][1];
-    expect(parentOfDep1DevDep1.name).toBe('dep1');
+    const pathOfDep1DevDep1 = visitDevDependency.mock.calls[0][2]!;
+    expect(pathOfDep1DevDep1.map((node) => node.name)).toEqual([
+      'root',
+      'dep1'
+    ]);
 
-    const parentMapOfDevDep1 = visitDevDependency.mock.calls[1][2];
-    expect(parentMapOfDevDep1.get(visitDevDependency.mock.calls[1][0])).toBe(
-      root
-    );
+    const pathOfDevDep1 = visitDevDependency.mock.calls[1][2]!;
+    expect(pathOfDevDep1.map((node) => node.name)).toEqual(['root']);
   });
 });
