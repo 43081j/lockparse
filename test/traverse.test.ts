@@ -73,4 +73,34 @@ describe('traverse', () => {
     const pathOfDevDep1 = visitDevDependency.mock.calls[1][2]!;
     expect(pathOfDevDep1.map((node) => node.name)).toEqual(['root']);
   });
+
+  it('should handle circular dependencies', () => {
+    const root: ParsedDependency = {
+      name: 'root',
+      version: '1.0.0',
+      dependencies: [],
+      devDependencies: [],
+      peerDependencies: [],
+      optionalDependencies: []
+    };
+    // Creating a circular dependency
+    const circularDep: ParsedDependency = {
+      name: 'circularDep',
+      version: '1.0.0',
+      dependencies: [root],
+      devDependencies: [],
+      peerDependencies: [],
+      optionalDependencies: []
+    };
+    root.dependencies.push(circularDep);
+
+    const visitDependency = vi.fn<VisitorFn>();
+
+    traverse(root, {
+      dependency: visitDependency
+    });
+
+    expect(visitDependency).toHaveBeenCalledTimes(1);
+    expect(visitDependency.mock.calls[0][0].name).toBe('circularDep');
+  });
 });
