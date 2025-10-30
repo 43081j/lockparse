@@ -1,8 +1,8 @@
 # 🔒 lockparse
 
-> A tiny zero-dependency lockfile parser for npm, Yarn, pnpm, and Bun.
+> A tiny, zero-dependency lockfile parser for npm, Yarn, pnpm, and Bun.
 
-**⚠️ IMPORTANT**: This library is in early development and the API may change without warning.
+**⚠️ IMPORTANT**: This library is in early development, and the API may change without warning.
 
 ## Installation
 
@@ -18,7 +18,7 @@ import { readFile } from 'node:fs/promises';
 
 const lockfileContent = await readFile('./package-lock.json', 'utf-8');
 const packageJson = JSON.parse(await readFile('./package.json', 'utf-8'));
-const lockfile = parse(lockfileContent, 'npm', packageJson);
+const lockfile = await parse(lockfileContent, 'npm', packageJson);
 
 console.log(lockfile.root);
 ```
@@ -45,11 +45,11 @@ Parses a lockfile and returns a structured representation of the dependency tree
 
 - **`type`** (`LockFileType`): The detected lockfile type
 - **`packages`** (`ParsedDependency[]`): A flat array of all packages in the lockfile
-- **`root`** (`ParsedDependency`): The root dependency node representing the project dependency tree
+- **`root`** (`ParsedDependency`): The root dependency node representing the project's dependency tree
 
 #### Note: Yarn parsing
 
-When parsing Yarn lockfiles, the `packageJson` parameter is highly recommended. Without it, the root node will not contain any dependencies as the Yarn lock file does not include this information. All packages will be in the `packages` array, though.
+When parsing Yarn lockfiles, the `packageJson` parameter is highly recommended. Without it, the root node will not contain any dependencies as the Yarn lock file does not include this information. All packages will however still be contained in the `packages` array.
 
 ## License
 
