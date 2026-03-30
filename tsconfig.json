@@ -6,6 +6,7 @@
     "types": [],
     "declaration": true,
     "outDir": "./lib",
+    "rootDir": "./src",
     "isolatedModules": true,
     "isolatedDeclarations": false,
     "erasableSyntaxOnly": true,
