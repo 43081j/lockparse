@@ -1,7 +1,9 @@
 import {describe, it, expect} from 'vitest';
+import {parse, traverse} from '../src/main.js';
 
-describe('Sample Test Suite', () => {
-  it('should pass this sample test', () => {
-    expect(1 + 1).toBe(2);
+describe('main', () => {
+  it('exports correct functions', () => {
+    expect(typeof parse).toBe('function');
+    expect(typeof traverse).toBe('function');
   });
 });
