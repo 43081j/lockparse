@@ -22,9 +22,13 @@ type BunLockFilePackage = [
   hash: string
 ];
 
+type BunLockFileWorkspacePackage = [versionKey: string];
+
+type BunLockFilePackageEntry = BunLockFilePackage | BunLockFileWorkspacePackage;
+
 interface BunLockFileLike {
   workspaces?: Record<string, BunLockFileWorkspace>;
-  packages: Record<string, BunLockFilePackage>;
+  packages: Record<string, BunLockFilePackageEntry>;
 }
 
 const trailingCommaRegex = /,(?=\s+[}\]])/g;
@@ -43,7 +47,7 @@ export async function parseBun(input: string): Promise<ParsedLockFile> {
   const rootPackage = lockFile.workspaces?.[''];
 
   if (!rootPackage) {
-    throw new Error('Invalid npm lock file: missing root package');
+    throw new Error('Invalid bun lock file: missing root package');
   }
 
   const {packages, root} = processPackages(rootPackage, lockFile.packages);
@@ -59,7 +63,7 @@ export async function parseBun(input: string): Promise<ParsedLockFile> {
 
 function processPackages(
   rootPackage: BunLockFileWorkspace,
-  input: Record<string, BunLockFilePackage>
+  input: Record<string, BunLockFilePackageEntry>
 ): {
   root: ParsedDependency;
   packages: ParsedDependency[];
@@ -92,6 +96,12 @@ function processPackages(
 
   for (const [pkgKey, pkgInfo] of Object.entries(input)) {
     const [, , packageInfo] = pkgInfo;
+
+    // probably a workspace entry, which doesn't have dependency info
+    if (!packageInfo) {
+      continue;
+    }
+
     const pkg = packageMap[pkgKey];
     processDependencies(packageInfo, pkg, packageMap, pkgKey);
   }
