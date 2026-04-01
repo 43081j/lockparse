@@ -49,6 +49,29 @@ describe('npm parser', () => {
     );
   });
 
+  test('skips package links', async () => {
+    const input = JSON.stringify({
+      name: 'example-project',
+      version: '1.0.0',
+      lockfileVersion: 2,
+      packages: {
+        '': {
+          name: 'example-project',
+          version: '1.0.0',
+          dependencies: {
+            'example-workspace-package': '0.0.1'
+          }
+        },
+        'node_modules/example-workspace-package': {
+          resolved: 'packages/example-workspace-package',
+          link: true
+        }
+      }
+    });
+    const parsed = await parse(input, 'npm');
+    expect(parsed).toMatchSnapshot();
+  });
+
   test('parses a complex npm lock file', async () => {
     const input = await readFile(
       path.join(fixtureDir, 'package-lock.json'),
