@@ -18,10 +18,15 @@ interface NpmLockFilePackage {
   peerDependenciesMeta?: Record<string, NpmLockFilePeerDependencyMeta>;
 }
 
+interface NpmLockFilePackageLink {
+  resolved: string;
+  link: true;
+}
+
 interface NpmLockFileLike {
   name: string;
   version: string;
-  packages: Record<string, NpmLockFilePackage>;
+  packages: Record<string, NpmLockFilePackage | NpmLockFilePackageLink>;
 }
 
 export async function parseNpm(input: string): Promise<ParsedLockFile> {
@@ -50,13 +55,25 @@ export async function parseNpm(input: string): Promise<ParsedLockFile> {
   return parsed;
 }
 
-function processPackages(input: Record<string, NpmLockFilePackage>): {
+function isPackageLink(
+  pkg: NpmLockFilePackage | NpmLockFilePackageLink
+): pkg is NpmLockFilePackageLink {
+  return 'link' in pkg && pkg.link === true;
+}
+
+function processPackages(
+  input: Record<string, NpmLockFilePackage | NpmLockFilePackageLink>
+): {
   root: ParsedDependency;
   packages: ParsedDependency[];
 } {
   const packageMap: Record<string, ParsedDependency> = {};
 
   for (const [pkgKey, pkg] of Object.entries(input)) {
+    if (isPackageLink(pkg)) {
+      // for now at least, skip workspace packages
+      continue;
+    }
     const modulesIndex = pkgKey.lastIndexOf('node_modules/');
     let name = pkg.name;
     if (modulesIndex !== -1) {
@@ -73,6 +90,11 @@ function processPackages(input: Record<string, NpmLockFilePackage>): {
   }
 
   for (const [pkgKey, pkg] of Object.entries(input)) {
+    if (isPackageLink(pkg)) {
+      // for now at least, skip workspace packages
+      continue;
+    }
+
     const parsedPkg = packageMap[pkgKey];
 
     processDependencyMap(pkg, parsedPkg, packageMap, pkgKey);
