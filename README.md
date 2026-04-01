@@ -2,8 +2,6 @@
 
 > A tiny, zero-dependency lockfile parser for npm, Yarn, pnpm, and Bun.
 
-**⚠️ IMPORTANT**: This library is in early development, and the API may change without warning.
-
 ## Installation
 
 ```bash

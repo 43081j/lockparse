@@ -58,7 +58,7 @@ export async function parseNpm(input: string): Promise<ParsedLockFile> {
 function isPackageLink(
   pkg: NpmLockFilePackage | NpmLockFilePackageLink
 ): pkg is NpmLockFilePackageLink {
-  return 'link' in pkg && pkg.link === true;
+  return 'link' in pkg && pkg.link;
 }
 
 function processPackages(
