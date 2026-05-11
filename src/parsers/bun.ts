@@ -13,6 +13,7 @@ interface BunDependencyInfo {
 
 interface BunLockFileWorkspace extends BunDependencyInfo {
   name: string;
+  version?: string;
 }
 
 type BunLockFilePackage = [
@@ -22,16 +23,29 @@ type BunLockFilePackage = [
   hash: string
 ];
 
+type BunLockFileInlineDepsPackage = [
+  versionKey: string,
+  packageInfo: BunDependencyInfo
+];
+
 type BunLockFileWorkspacePackage = [versionKey: string];
 
-type BunLockFilePackageEntry = BunLockFilePackage | BunLockFileWorkspacePackage;
+type BunLockFilePackageEntry =
+  | BunLockFilePackage
+  | BunLockFileInlineDepsPackage
+  | BunLockFileWorkspacePackage;
 
 interface BunLockFileLike {
   workspaces?: Record<string, BunLockFileWorkspace>;
   packages: Record<string, BunLockFilePackageEntry>;
 }
 
+type ResolvedEntry =
+  | {kind: 'inline'; versionKey: string; depInfo: BunDependencyInfo}
+  | {kind: 'workspace-ref'; versionKey: string};
+
 const trailingCommaRegex = /,(?=\s+[}\]])/g;
+const workspacePrefix = 'workspace:';
 
 export async function parseBun(input: string): Promise<ParsedLockFile> {
   let lockFile: BunLockFileLike;
@@ -44,7 +58,8 @@ export async function parseBun(input: string): Promise<ParsedLockFile> {
     return Promise.reject(new Error('Invalid JSON format'));
   }
 
-  const rootPackage = lockFile.workspaces?.[''];
+  const workspaces = lockFile.workspaces ?? {};
+  const rootPackage = workspaces[''];
 
   if (!rootPackage) {
     throw new Error('Invalid bun lock file: missing root package');
@@ -52,13 +67,55 @@ export async function parseBun(input: string): Promise<ParsedLockFile> {
 
   const {packages, root} = processPackages(rootPackage, lockFile.packages);
 
-  const parsed: ParsedLockFile = {
+  return {
     type: 'bun',
     packages,
     root
   };
+}
 
-  return parsed;
+function resolveEntry(entry: BunLockFilePackageEntry): ResolvedEntry {
+  const versionKey = entry[0];
+
+  if (entry.length === 4) {
+    return {kind: 'inline', versionKey, depInfo: entry[2]};
+  }
+
+  if (entry.length === 2) {
+    const second = entry[1];
+    if (typeof second === 'object' && second !== null) {
+      return {kind: 'inline', versionKey, depInfo: second};
+    }
+  }
+
+  return {kind: 'workspace-ref', versionKey};
+}
+
+function parseVersionKey(versionKey: string): {name: string; version: string} {
+  const versionIndex = versionKey.indexOf('@', 1);
+  if (versionIndex === -1) {
+    return {name: versionKey, version: ''};
+  }
+  return {
+    name: versionKey.slice(0, versionIndex),
+    version: versionKey.slice(versionIndex + 1)
+  };
+}
+
+function isWorkspaceVersion(version: string): boolean {
+  return version.startsWith(workspacePrefix);
+}
+
+function buildPackage(versionKey: string): ParsedDependency {
+  const {name, version} = parseVersionKey(versionKey);
+  return {
+    name,
+    version,
+    dependencies: [],
+    devDependencies: [],
+    peerDependencies: [],
+    optionalDependencies: []
+  };
 }
 
 function processPackages(
@@ -78,32 +135,30 @@ function processPackages(
     peerDependencies: []
   };
 
-  for (const [pkgKey, pkgInfo] of Object.entries(input)) {
-    const [versionKey] = pkgInfo;
-    const versionIndex = versionKey.indexOf('@', 1);
-    const version = versionKey.slice(versionIndex + 1);
-    const name = versionKey.slice(0, versionIndex);
-    const pkg: ParsedDependency = {
-      name,
-      version,
-      dependencies: [],
-      devDependencies: [],
-      peerDependencies: [],
-      optionalDependencies: []
-    };
-    packageMap[pkgKey] = pkg;
+  // Pre-resolve every entry once so pass-1 and pass-2 share the parsed shape.
+  const resolved: Array<[string, ResolvedEntry]> = Object.entries(input).map(
+    ([pkgKey, pkgInfo]) => [pkgKey, resolveEntry(pkgInfo)]
+  );
+
+  for (const [pkgKey, entry] of resolved) {
+    packageMap[pkgKey] = buildPackage(entry.versionKey);
   }
 
-  for (const [pkgKey, pkgInfo] of Object.entries(input)) {
-    const [, , packageInfo] = pkgInfo;
-
-    // probably a workspace entry, which doesn't have dependency info
-    if (!packageInfo) {
+  for (const [pkgKey, entry] of resolved) {
+    const pkg = packageMap[pkgKey];
+    const {version} = parseVersionKey(entry.versionKey);
+    if (isWorkspaceVersion(version)) {
       continue;
     }
 
-    const pkg = packageMap[pkgKey];
-    processDependencies(packageInfo, pkg, packageMap, pkgKey);
+    switch (entry.kind) {
+      case 'inline':
+        processDependencies(entry.depInfo, pkg, packageMap, pkgKey);
+        break;
+      // TODO: Figure out how to handle monorepo setups
+      case 'workspace-ref':
+        break;
+    }
   }
 
   processDependencies(rootPackage, root, packageMap);
@@ -120,7 +175,7 @@ function processDependencies(
   for (const depType of dependencyTypes) {
     const collection = rootInfo[depType];
     if (!collection) {
-      return;
+      continue;
     }
     for (const name of Object.keys(collection)) {
       let pkg: ParsedDependency | undefined;
