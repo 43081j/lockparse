@@ -23,23 +23,23 @@ describe('bun parser', () => {
     const rootDevDependencyNames = parsed.root.devDependencies.map(
       (dependency) => dependency.name
     );
-    expect(rootDevDependencyNames).toEqual(
-      expect.arrayContaining(['@eslint/js', 'eslint'])
-    );
+    expect(rootDevDependencyNames).toEqual([
+      '@eslint/js',
+      '@types/bun',
+      'eslint'
+    ]);
 
     const rootPeerDependencyNames = parsed.root.peerDependencies.map(
       (dependency) => dependency.name
     );
-    expect(rootPeerDependencyNames).toEqual(
-      expect.arrayContaining(['typescript'])
-    );
+    expect(rootPeerDependencyNames).toEqual(['typescript']);
 
     const acornJsx = parsed.packages.find(
       (dependency) => dependency.name === 'acorn-jsx'
     );
     expect(
       acornJsx?.peerDependencies.map((dependency) => dependency.name)
-    ).toEqual(expect.arrayContaining(['acorn']));
+    ).toEqual(['acorn']);
   });
 
   test('rejects when invalid JSON', async () => {
