@@ -16,6 +16,32 @@ describe('bun parser', () => {
     expect(parsed).toMatchSnapshot();
   });
 
+  test('links dependency edges when earlier sections are missing', async () => {
+    const input = await readFile(path.join(fixtureDir, 'bun.lock'), 'utf-8');
+    const parsed = await parse(input, 'bun');
+
+    const rootDevDependencyNames = parsed.root.devDependencies.map(
+      (dependency) => dependency.name
+    );
+    expect(rootDevDependencyNames).toEqual(
+      expect.arrayContaining(['@eslint/js', 'eslint'])
+    );
+
+    const rootPeerDependencyNames = parsed.root.peerDependencies.map(
+      (dependency) => dependency.name
+    );
+    expect(rootPeerDependencyNames).toEqual(
+      expect.arrayContaining(['typescript'])
+    );
+
+    const acornJsx = parsed.packages.find(
+      (dependency) => dependency.name === 'acorn-jsx'
+    );
+    expect(
+      acornJsx?.peerDependencies.map((dependency) => dependency.name)
+    ).toEqual(expect.arrayContaining(['acorn']));
+  });
+
   test('rejects when invalid JSON', async () => {
     const input = `{invalidJson: true`;
     await expect(parse(input, 'bun')).rejects.toThrow('Invalid JSON format');

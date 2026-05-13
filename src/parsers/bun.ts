@@ -120,7 +120,7 @@ function processDependencies(
   for (const depType of dependencyTypes) {
     const collection = rootInfo[depType];
     if (!collection) {
-      return;
+      continue;
     }
     for (const name of Object.keys(collection)) {
       let pkg: ParsedDependency | undefined;
