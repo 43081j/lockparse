@@ -35,9 +35,9 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@types/node": "^25.9.3",
-    "@vitest/coverage-v8": "^4.1.8",
-    "oxlint": "^1.69.0",
+    "@types/node": "^26.0.0",
+    "@vitest/coverage-v8": "^4.1.9",
+    "oxlint": "^1.70.0",
     "oxlint-tsgolint": "^0.23.0",
     "prettier": "^3.8.4",
     "typescript": "^6.0.3",
