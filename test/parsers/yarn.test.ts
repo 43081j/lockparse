@@ -108,4 +108,30 @@ __metadata:
     const parsed = await parse(input, 'yarn');
     expect(parsed).toMatchSnapshot();
   });
+
+  test('omits unresolved package references from the flat package list', async () => {
+    const input = `
+"some-package@npm:^1.0.0":
+  version: 1.2.3
+  resolution: some-package@npm:1.2.3
+  dependencies:
+    replaced-package: npm:^2.0.0
+  peerDependencies:
+    optional-peer: ^3.0.0
+
+"replaced-package@npm:@nolyfill/replaced-package@latest":
+  version: 1.0.44
+  resolution: "@nolyfill/replaced-package@npm:1.0.44"
+`;
+    const parsed = await parse(input, 'yarn');
+    const packageVersions = parsed.packages.map(({name, version}) => ({
+      name,
+      version
+    }));
+
+    expect(packageVersions).toEqual([
+      {name: 'some-package', version: '1.2.3'},
+      {name: 'replaced-package', version: '1.0.44'}
+    ]);
+  });
 });
