@@ -36,9 +36,9 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
-    "@vitest/coverage-v8": "^5.0.5",
-    "oxlint": "^1.90.0",
-    "oxlint-tsgolint": "^7.0.2005",
+    "@vitest/coverage-v8": "^5.1.0",
+    "oxlint": "^1.91.0",
+    "oxlint-tsgolint": "^7.0.2006",
     "prettier": "^3.9.10",
     "typescript": "^7.0.2",
     "vitest": "^5.0.0"
