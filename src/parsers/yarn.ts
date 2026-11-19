@@ -36,7 +36,7 @@ export async function parseYarn(
 
   return {
     type: 'yarn',
-    packages: Object.values(packageMap),
+    packages: Object.values(packageMap).filter((pkg) => pkg.version),
     root
   };
 }
