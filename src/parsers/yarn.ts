@@ -44,6 +44,37 @@ export async function parseYarn(
 const indentPattern = /^( *)/;
 const quotePattern = /^['"]|['"]$/g;
 
+function setNameFromKey(pkg: ParsedDependency, pkgKey: string): void {
+  const separatorIndex = pkgKey.indexOf('@', 1);
+  const name = pkgKey.slice(0, separatorIndex);
+  const range = pkgKey.slice(separatorIndex + 1);
+  if (range.startsWith('npm:')) {
+    const target = range.slice('npm:'.length);
+    const targetSeparatorIndex = target.indexOf('@', 1);
+    if (targetSeparatorIndex !== -1) {
+      pkg.name = target.slice(0, targetSeparatorIndex);
+      if (pkg.name !== name) {
+        pkg.alias = name;
+      }
+      return;
+    }
+  }
+  pkg.name = name;
+}
+
+function createDependency(pkgKey: string): ParsedDependency {
+  const pkg: ParsedDependency = {
+    name: '',
+    version: '',
+    dependencies: [],
+    devDependencies: [],
+    optionalDependencies: [],
+    peerDependencies: []
+  };
+  setNameFromKey(pkg, pkgKey);
+  return pkg;
+}
+
 function processYarnV1(
   input: string,
   packageMap: Record<string, ParsedDependency>
@@ -68,22 +99,10 @@ function processYarnV1(
         if (!currentPackage) {
           let pkg = packageMap[pkgKey];
           if (!pkg) {
-            pkg = {
-              name: '',
-              version: '',
-              dependencies: [],
-              devDependencies: [],
-              optionalDependencies: [],
-              peerDependencies: []
-            };
+            pkg = createDependency(pkgKey);
             packageMap[pkgKey] = pkg;
           }
           currentPackage = pkg;
-          if (!pkg.name) {
-            const separatorIndex = pkgKey.indexOf('@', 1);
-            const name = pkgKey.slice(0, separatorIndex);
-            pkg.name = name;
-          }
         } else {
           packageMap[pkgKey] = currentPackage;
         }
@@ -121,14 +140,7 @@ function processYarnV1(
       const depPkgKey = `${depName}@${depSemver}`;
       let depPkg = packageMap[depPkgKey];
       if (!depPkg) {
-        depPkg = {
-          name: depName,
-          version: '',
-          dependencies: [],
-          devDependencies: [],
-          optionalDependencies: [],
-          peerDependencies: []
-        };
+        depPkg = createDependency(depPkgKey);
         packageMap[depPkgKey] = depPkg;
       }
       currentPackage[currentDepType].push(depPkg);
@@ -154,22 +166,10 @@ function processYarn(
         }
       }
       if (!pkg) {
-        pkg = {
-          name: '',
-          version: '',
-          dependencies: [],
-          devDependencies: [],
-          optionalDependencies: [],
-          peerDependencies: []
-        };
+        pkg = createDependency(pkgKeys[0]);
       }
       packageMap[pair.key] = pkg;
       for (const pkgKey of pkgKeys) {
-        if (!pkg.name) {
-          const separatorIndex = pkgKey.indexOf('@', 1);
-          const name = pkgKey.slice(0, separatorIndex);
-          pkg.name = name;
-        }
         packageMap[pkgKey] = pkg;
       }
     } else if (pair.path.length === 1 && pair.key === 'version' && pair.value) {
@@ -191,14 +191,7 @@ function processYarn(
       const depPkgKey = `${depName}@${depSemver}`;
       let depPkg = packageMap[depPkgKey];
       if (!depPkg) {
-        depPkg = {
-          name: depName,
-          version: '',
-          dependencies: [],
-          devDependencies: [],
-          optionalDependencies: [],
-          peerDependencies: []
-        };
+        depPkg = createDependency(depPkgKey);
         packageMap[depPkgKey] = depPkg;
       }
       if (pkg) {
@@ -220,7 +213,7 @@ function processYarn(
     const pkg = packageMap[pkgKey];
     if (pkg) {
       const deps = pkg.dependencies;
-      const index = deps.findIndex((d) => d.name === depName);
+      const index = deps.findIndex((d) => (d.alias ?? d.name) === depName);
       if (index !== -1) {
         const [dep] = deps.splice(index, 1);
         pkg.optionalDependencies.push(dep);
@@ -241,8 +234,9 @@ function processRootDependencies(
     }
     const destination = root[depType];
     for (const [depName, semver] of Object.entries(deps)) {
-      const mapKey = `${depName}@npm:${semver}`;
-      const existing = packageMap[mapKey];
+      const existing =
+        packageMap[`${depName}@${semver}`] ??
+        packageMap[`${depName}@npm:${semver}`];
       if (existing) {
         destination.push(existing);
       }

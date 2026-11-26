@@ -91,6 +91,10 @@ function processPackages(
       peerDependencies: [],
       optionalDependencies: []
     };
+    const installedName = getInstalledName(pkgKey);
+    if (installedName !== name) {
+      pkg.alias = installedName;
+    }
     packageMap[pkgKey] = pkg;
   }
 
@@ -109,6 +113,13 @@ function processPackages(
   processDependencies(rootPackage, root, packageMap);
 
   return {packages: Object.values(packageMap), root};
+}
+
+function getInstalledName(pkgKey: string): string {
+  const segments = pkgKey.split('/');
+  const last = segments[segments.length - 1];
+  const scope = segments[segments.length - 2];
+  return scope?.startsWith('@') ? `${scope}/${last}` : last;
 }
 
 function processDependencies(

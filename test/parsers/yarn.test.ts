@@ -108,4 +108,40 @@ __metadata:
     const parsed = await parse(input, 'yarn');
     expect(parsed).toMatchSnapshot();
   });
+
+  test('resolves aliased dependencies', async () => {
+    const input = await readFile(
+      path.join(fixtureDir, 'yarn-alias.lock'),
+      'utf-8'
+    );
+    const packageJson = {
+      dependencies: {foo: 'npm:tinyexec@1.4.0', bar: 'npm:tinyglobby@0.2.17'}
+    };
+    const parsed = await parse(input, 'yarn', packageJson);
+    const foo = parsed.root.dependencies.find((d) => d.alias === 'foo')!;
+    const bar = parsed.root.dependencies.find((d) => d.alias === 'bar')!;
+    expect(foo.name).toBe('tinyexec');
+    expect(foo.version).toBe('1.4.0');
+    expect(bar.name).toBe('tinyglobby');
+    expect(bar.version).toBe('0.2.17');
+    expect(bar.dependencies.map((d) => d.name)).toEqual(['fdir', 'picomatch']);
+  });
+
+  test('resolves aliased dependencies in yarn v1', async () => {
+    const input = await readFile(
+      path.join(fixtureDir, 'yarn-v1-alias.lock'),
+      'utf-8'
+    );
+    const packageJson = {
+      dependencies: {foo: 'npm:tinyexec@1.4.0', bar: 'npm:tinyglobby@0.2.17'}
+    };
+    const parsed = await parse(input, 'yarn', packageJson);
+    const foo = parsed.root.dependencies.find((d) => d.alias === 'foo')!;
+    const bar = parsed.root.dependencies.find((d) => d.alias === 'bar')!;
+    expect(foo.name).toBe('tinyexec');
+    expect(foo.version).toBe('1.4.0');
+    expect(bar.name).toBe('tinyglobby');
+    expect(bar.version).toBe('0.2.17');
+    expect(bar.dependencies.map((d) => d.name)).toEqual(['fdir', 'picomatch']);
+  });
 });
