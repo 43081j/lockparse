@@ -74,12 +74,16 @@ describe('bun parser', () => {
       'utf-8'
     );
     const parsed = await parse(input, 'bun');
-    const foo = parsed.root.dependencies.find((d) => d.alias === 'foo')!;
-    const bar = parsed.root.dependencies.find((d) => d.alias === 'bar')!;
-    expect(foo.name).toBe('tinyexec');
-    expect(foo.version).toBe('1.4.0');
-    expect(bar.name).toBe('tinyglobby');
-    expect(bar.version).toBe('0.2.17');
-    expect(bar.dependencies.map((d) => d.name)).toEqual(['fdir', 'picomatch']);
+    const rootDeps = parsed.root.dependencies.map(
+      (d) => `${d.name}@${d.version}`
+    );
+    expect(rootDeps).toEqual(['tinyglobby@0.2.17', 'tinyexec@1.4.0']);
+    const tinyglobby = parsed.root.dependencies.find(
+      (d) => d.name === 'tinyglobby'
+    )!;
+    expect(tinyglobby.dependencies.map((d) => d.name)).toEqual([
+      'fdir',
+      'picomatch'
+    ]);
   });
 });
