@@ -53,9 +53,6 @@ function setNameFromKey(pkg: ParsedDependency, pkgKey: string): void {
     const targetSeparatorIndex = target.indexOf('@', 1);
     if (targetSeparatorIndex !== -1) {
       pkg.name = target.slice(0, targetSeparatorIndex);
-      if (pkg.name !== name) {
-        pkg.alias = name;
-      }
       return;
     }
   }
@@ -213,7 +210,7 @@ function processYarn(
     const pkg = packageMap[pkgKey];
     if (pkg) {
       const deps = pkg.dependencies;
-      const index = deps.findIndex((d) => (d.alias ?? d.name) === depName);
+      const index = deps.findIndex((d) => d.name === depName);
       if (index !== -1) {
         const [dep] = deps.splice(index, 1);
         pkg.optionalDependencies.push(dep);

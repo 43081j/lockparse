@@ -60,11 +60,7 @@ function getOrCreateDependency(
   versionKey: string | null
 ): ParsedDependency {
   if (versionKey && isAliasedVersionKey(versionKey)) {
-    const pkg = getOrCreatePackage(packageMap, versionKey);
-    if (pkg.name !== depName) {
-      pkg.alias ??= depName;
-    }
-    return pkg;
+    return getOrCreatePackage(packageMap, versionKey);
   }
   return getOrCreatePackage(
     packageMap,

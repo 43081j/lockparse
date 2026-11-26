@@ -13,7 +13,6 @@ export const dependencyTypes: ReadonlyArray<DependencyType> = [
 
 export interface ParsedDependency {
   name: string;
-  alias?: string;
   version: string;
   dependencies: ParsedDependency[];
   devDependencies: ParsedDependency[];

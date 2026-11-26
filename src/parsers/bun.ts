@@ -83,7 +83,7 @@ function processPackages(
     const versionIndex = versionKey.indexOf('@', 1);
     const version = versionKey.slice(versionIndex + 1);
     const name = versionKey.slice(0, versionIndex);
-    const pkg: ParsedDependency = {
+    packageMap[pkgKey] = {
       name,
       version,
       dependencies: [],
@@ -91,11 +91,6 @@ function processPackages(
       peerDependencies: [],
       optionalDependencies: []
     };
-    const installedName = getInstalledName(pkgKey);
-    if (installedName !== name) {
-      pkg.alias = installedName;
-    }
-    packageMap[pkgKey] = pkg;
   }
 
   for (const [pkgKey, pkgInfo] of Object.entries(input)) {
@@ -113,13 +108,6 @@ function processPackages(
   processDependencies(rootPackage, root, packageMap);
 
   return {packages: Object.values(packageMap), root};
-}
-
-function getInstalledName(pkgKey: string): string {
-  const segments = pkgKey.split('/');
-  const last = segments[segments.length - 1];
-  const scope = segments[segments.length - 2];
-  return scope?.startsWith('@') ? `${scope}/${last}` : last;
 }
 
 function processDependencies(
