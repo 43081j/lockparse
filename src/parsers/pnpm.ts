@@ -28,27 +28,20 @@ export async function parsePnpm(input: string): Promise<ParsedLockFile> {
       const key = pair.key;
 
       if (key === 'version' && pair.value) {
-        const versionKey = pair.value;
-        const mapKey = `${packageName}@${versionKey}`;
-        const currentPackage = getOrCreatePackage(
+        const currentPackage = getOrCreateDependency(
           packageMap,
-          mapKey,
           packageName,
-          versionKey
+          pair.value
         );
         tryAddDependency(root, dependencyType, currentPackage);
       }
     } else if (pair.path.length === 3 && pair.path[0] === 'snapshots') {
       const [, mapKey, dependencyType] = pair.path;
       const currentPackage = getOrCreatePackage(packageMap, mapKey);
-      const depVersionKey = pair.value;
-      const depName = pair.key;
-      const depMapKey = `${depName}@${depVersionKey}`;
-      const depPackage = getOrCreatePackage(
+      const depPackage = getOrCreateDependency(
         packageMap,
-        depMapKey,
-        depName,
-        depVersionKey ?? undefined
+        pair.key,
+        pair.value
       );
       tryAddDependency(currentPackage, dependencyType, depPackage);
     }
@@ -59,6 +52,34 @@ export async function parsePnpm(input: string): Promise<ParsedLockFile> {
     packages: Object.values(packageMap),
     root
   };
+}
+
+function getOrCreateDependency(
+  packageMap: Record<string, ParsedDependency>,
+  depName: string,
+  versionKey: string | null
+): ParsedDependency {
+  if (versionKey && isAliasedVersionKey(versionKey)) {
+    const pkg = getOrCreatePackage(packageMap, versionKey);
+    if (pkg.name !== depName) {
+      pkg.alias ??= depName;
+    }
+    return pkg;
+  }
+  return getOrCreatePackage(
+    packageMap,
+    `${depName}@${versionKey}`,
+    depName,
+    versionKey ?? undefined
+  );
+}
+
+function isAliasedVersionKey(versionKey: string): boolean {
+  const version = computeVersionForVersionKey(versionKey);
+  const separatorIndex = version.indexOf('@', 1);
+  return (
+    separatorIndex !== -1 && !version.slice(0, separatorIndex).includes(':')
+  );
 }
 
 function getOrCreatePackage(

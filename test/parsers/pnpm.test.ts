@@ -46,4 +46,19 @@ packages:
     const parsed = await parse(input, 'pnpm');
     expect(parsed).toMatchSnapshot();
   });
+
+  test('resolves aliased dependencies', async () => {
+    const input = await readFile(
+      path.join(fixtureDir, 'pnpm-lock-alias.yaml'),
+      'utf-8'
+    );
+    const parsed = await parse(input, 'pnpm');
+    const foo = parsed.root.dependencies.find((d) => d.alias === 'foo')!;
+    const bar = parsed.root.dependencies.find((d) => d.alias === 'bar')!;
+    expect(foo.name).toBe('tinyexec');
+    expect(foo.version).toBe('1.4.0');
+    expect(bar.name).toBe('tinyglobby');
+    expect(bar.version).toBe('0.2.17');
+    expect(bar.dependencies.map((d) => d.name)).toEqual(['fdir', 'picomatch']);
+  });
 });

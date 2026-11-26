@@ -76,10 +76,16 @@ function processPackages(
     }
     const modulesIndex = pkgKey.lastIndexOf('node_modules/');
     let name = pkg.name;
+    let alias: string | undefined;
     if (modulesIndex !== -1) {
-      name = pkgKey.slice(modulesIndex + 'node_modules/'.length);
+      const installedName = pkgKey.slice(modulesIndex + 'node_modules/'.length);
+      if (pkg.name && pkg.name !== installedName) {
+        alias = installedName;
+      } else {
+        name = installedName;
+      }
     }
-    packageMap[pkgKey] = {
+    const parsed: ParsedDependency = {
       name,
       version: pkg.version,
       dependencies: [],
@@ -87,6 +93,10 @@ function processPackages(
       peerDependencies: [],
       optionalDependencies: []
     };
+    if (alias) {
+      parsed.alias = alias;
+    }
+    packageMap[pkgKey] = parsed;
   }
 
   for (const [pkgKey, pkg] of Object.entries(input)) {
